@@ -22,4 +22,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     re_path(r'^$', index, name='index'),
     re_path(r'^ipfsLink$', ipfsLink, name='ipfsLink'),
+    re_path(r'^ipfsLinkRecent$', ipfsLinkRecent, name='ipfsLinkRecent'),
 ]

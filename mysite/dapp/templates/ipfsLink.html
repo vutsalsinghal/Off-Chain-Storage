@@ -20,6 +20,12 @@
           <option value="2">Message</option>
         </select>
       </div>
+      <div class="col s12 l6">
+        <br>
+        <a class="waves-effect waves-light btn right amber" onclick='ipfsGetRecent()'>View Recent</a>
+        <a class="modal-trigger" href="#recentModal"></a>
+        <a class="modal-trigger" href="#notifyModal"></a>
+      </div>
     </div>
     <div class="row">
       <div id="insFileType">
@@ -41,32 +47,36 @@
     </div>
   </form>
 
+  <!-- Recent Modal -->
+  <div id="recentModal" class="modal">
+    <div class="modal-content">
+      <h4>Your Recent Messages</h4>
+      <table class="striped centered">
+        <thead>
+          <tr>
+              <th>Hash Value</th>
+              <th>Time of Hash</th>
+          </tr>
+        </thead>
+        <tbody id="insRecentHere">
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Notify Modal -->
+  <div id="notifyModal" class="modal">
+    <div class="modal-content">
+      <h4>Hang In There</h4>
+      <p>Trying to get your recent messages. It shouldn't take very long :P</p>
+    </div>
+    <div class="modal-footer">
+      <a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat">Okie</a>
+    </div>
+  </div>
+
 
   <script type="text/javascript">
-    function FileType(fType){
-      if (fType == '1'){
-        $('#id_message').remove();
-        $("#insFileType").after('\
-          <div id="id_file" class="col l6"> \
-            <div class="file-field input-field"> \
-              <div class="btn"> \
-                <span>File</span> \
-                <input type="file" id="actual_file" data-url="/ipfsLink" data-form-data="{"csrfmiddlewaretoken": "{{ csrf_token }}"}"> \
-              </div> \
-              <div class="file-path-wrapper"> \
-                <input class="file-path validate" type="text"> \
-              </div> \
-            </div>\
-          </div>');
-      }else if (fType == '2'){
-        $('#id_file').remove();
-        $("#insFileType").after('\
-          <div id="id_message" class="col l6">\
-            <input placeholder="Type your message!" id="message" type="text">\
-          </div>');
-      }
-    }
-    
     var userAccount;
     var cryptoIpfs;
     function startApp() {
@@ -79,39 +89,6 @@
             userAccount = web3js.eth.defaultAccount;
           }
         }, 1000);}
-
-    function save_hash(hash){
-      $('#uploading').append('<p id="txnMining">[INFO] Starting txn solidification on blockchain...</p>');
-      var result = cryptoIpfsInstance.saveHash(hash,{value:web3js.toWei("0.001"), gas:140000}, 
-        function(err, txn_hash_res){
-          console.log(err == null);
-          if (err){
-            //$("#txnMining").text('[INFO] Error in MetaMask payment!!! Please try again');
-            $('#txnMining').append('<p style="color:#ff0000;">' + err + '</p>');
-          }else{
-            $("#txnMining").text('[INFO] MetaMask payment complete!');
-            $('#txnMining').append('<p>Transaction hash: ' + txn_hash_res + '</p>');
-            $('#txnMining').append('<p>Transaction Link: <a href="https://ropsten.etherscan.io/tx/' + txn_hash_res + '" target="_blank" >link</a>');
-          }/*
-          web3js.eth.getBlock("pending", 
-            function(err,block_res){
-              console.log(block_res);
-              while (block_res.hash == null){
-                console.log("Mining in progress...");
-                // STOP condition!!!
-              }
-              var txnReceipt = web3js.eth.getTransactionReceipt(txn_hash_res, 
-                function(err,txn_status_res){
-                  console.log(txn_status_res.status);
-                  if (txn_status_res.status == "0x1"){
-                    console.log("Transactions mined successfully!");}
-                }
-              );
-            }
-          );*/
-        }
-      );
-    }
 
     function ipfsUpload(){
       event.preventDefault();
@@ -150,22 +127,82 @@
           $('#uploading').append('<p>IPFS Hash: ' + data.hash + '</p>');
           $('#uploading').append('<p>IPFS Link: <a href="' + data.link + '" target="_blank" >link</a>');
           save_hash(data.hash);
-        })
+      })
     };
 
-    window.addEventListener('load', function(){
-      if (typeof web3 !== 'undefined') {                  // Checking if Web3 has been injected by the browser (Mist/MetaMask)
-        web3js = new Web3(web3.currentProvider);
-        var accStat = web3js.eth.defaultAccount;
-        if (web3js.eth.defaultAccount == null){
-          alert("Please login to MetaMask extension!");
+    function save_hash(hash){
+      $('#uploading').append('<p id="txnMining">[INFO] Starting txn solidification on blockchain...</p>');
+      var result = cryptoIpfsInstance.saveHash(hash,{value:web3js.toWei("0.001"), gas:140000}, 
+        function(err, txn_hash_res){
+          if (err){
+            //$("#txnMining").text('[INFO] Error in MetaMask payment!!! Please try again');
+            $('#txnMining').append('<p style="color:#ff0000;">' + err + '</p>');
+          }else{
+            $("#txnMining").text('[INFO] MetaMask payment complete!');
+            $('#txnMining').append('<p>Transaction hash: ' + txn_hash_res + '</p>');
+            $('#txnMining').append('<p>Transaction Link: <a href="https://ropsten.etherscan.io/tx/' + txn_hash_res + '" target="_blank" >link</a>');
+          }/*
+          web3js.eth.getBlock("pending", 
+            function(err,block_res){
+              console.log(block_res);
+              while (block_res.hash == null){
+                console.log("Mining in progress...");
+                // STOP condition!!!
+              }
+              var txnReceipt = web3js.eth.getTransactionReceipt(txn_hash_res, 
+                function(err,txn_status_res){
+                  console.log(txn_status_res.status);
+                  if (txn_status_res.status == "0x1"){
+                    console.log("Transactions mined successfully!");}
+                }
+              );
+            }
+          );*/
         }
-      } else {                                            // Handle the case where the user doesn't have Metamask installed
-        alert("Hey there! You might want to install MetaMask extension from metamask.io/ and connect to Ropsten test network");
+      );
+    }
+
+    function FileType(fType){
+      if (fType == '1'){
+        $('#id_message').remove();
+        $("#insFileType").after('\
+          <div id="id_file" class="col l6"> \
+            <div class="file-field input-field"> \
+              <div class="btn"> \
+                <span>File</span> \
+                <input type="file" id="actual_file" data-url="/ipfsLink" data-form-data="{"csrfmiddlewaretoken": "{{ csrf_token }}"}"> \
+              </div> \
+              <div class="file-path-wrapper"> \
+                <input class="file-path validate" type="text"> \
+              </div> \
+            </div>\
+          </div>');
+      }else if (fType == '2'){
+        $('#id_file').remove();
+        $("#insFileType").after('\
+          <div id="id_message" class="col l6">\
+            <input placeholder="Type your message!" id="message" type="text">\
+          </div>');
       }
-      networkCheck()
-    })
+    }
     
+    function ipfsGetRecent(){
+      $("#notifyModal").modal("open");
+      $.ajax({
+        type: "POST",
+        url: "/ipfsLinkRecent",
+        async: true,
+        dataType: "json",
+        data: {"userAccount":userAccount},
+        }).done(function(data) {
+          $("#notifyModal").modal("close");
+          for (i=0; i<data.arr.length;i++){
+            $('#insRecentHere').prepend('<tr><td>' + data.arr[i][0] + '</td><td>' + data.arr[i][1] + '</td></tr>');
+          }
+          $("#recentModal").modal("open");
+        })
+    }
+
     function networkCheck(){
       
       web3js.version.getNetwork((err, netId) => {
@@ -192,7 +229,31 @@
       })
     }
 
-  // CSRF code
+    window.addEventListener('load', function(){
+      if (typeof web3 !== 'undefined') {                  // Checking if Web3 has been injected by the browser (Mist/MetaMask)
+        web3js = new Web3(web3.currentProvider);
+        var accStat = web3js.eth.defaultAccount;
+        if (web3js.eth.defaultAccount == null){
+          alert("Please login to MetaMask extension!");
+        }
+      } else {                                            // Handle the case where the user doesn't have Metamask installed
+        alert("Hey there! You might want to install MetaMask extension from metamask.io/ and connect to Ropsten test network");
+      }
+      networkCheck()
+    })
+  </script>
+ {% endblock %}
+
+{% block load_js %}
+  <script type="text/javascript">
+    $(document).ready(function(){
+      // the "href" attribute of the modal trigger must specify the modal ID that wants to be triggered
+      $('.modal').modal();
+    });
+  </script>
+
+  <script type="text/javascript">
+    // CSRF code
     function getCookie(name) {
       var cookieValue = null;
       var i = 0;
@@ -224,9 +285,5 @@
       }
     }
   });
-
   </script>
- {% endblock %}
-
-{% block load_js %}
 {% endblock %}

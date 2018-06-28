@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+ {% block title_html %}
+  IpfsLink | Hi There!
+ {% endblock %}
+
+ {% block load_css %}
+  #container_color_1 {background-color: #eee;}
+ {% endblock %}
+
+ {% block content %}
+  <div class="section" id="index-banner">
+    <div class='row'></div>
+    <div class='row'></div>
+    <div class='row'></div>
+    <div class="container" id='container_color_1'>
+      <div class='row'></div>
+      <div class='row'></div>
+      <div class='row'></div>
+      {% if user.is_authenticated %}
+        <h1 class="header center black-text">Hi {{ request.user | capfirst }}!</h1>
+      {% else %}
+        <h1 class="header center black-text">Hi There!</h1>
+      {% endif %}
+      <div class='row'></div>
+      <div class='row'></div>
+      <div class='row'></div>
+      <div class="row center">
+        <h5 class="header col s12 light green-text darken-2">A <a href="https://www.djangoproject.com/" style='color:#DB4437' title="https://www.djangoproject.com" target="_blank">Django</a> powered responsive web app based on Material Design</h5>
+      </div>
+      <div class='row'></div>
+      <div class='row'></div>
+      <div class='row'></div>
+      <div class='row'></div>
+      <div class="row center">
+        <a style='background-color:#4285F4;' id="download-button" class="btn-large waves-effect waves-light modal-trigger" href="#About" data-target="About">About</a>
+      </div>
+      <div class='row'></div>
+      <div class='row'></div>
+      <div class='row'></div>
+    </div>
+  </div>
+
+  <!-- Modal Structure -->
+ <div class="container">
+   <div class="section">
+     <div id="About" class="modal font_ubuntu">
+       <div class="modal-content blue">
+           <div class="card-content white-text">
+             <h4>About</h4>
+
+           </div>
+       </div>
+     </div>
+   </div>
+ </div>
+  <!--Modal structure ends--> {% endblock %}
+
+{% block load_js %}
+  $(document).ready(function(){
+      $('.modal').modal();
+    });
+{% endblock %}

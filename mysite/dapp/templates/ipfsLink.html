@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+ {% block title_html %}
+  IpfsLink | Hi There!
+ {% endblock %}
+
+ {% block load_header %}
+  <script src="/static/js/web3.min.js"></script>
+  <script language="javascript" type="text/javascript" src="/static/js/contract_abi.js"></script>
+ {% endblock %}
+
+ {% block content %}  
+  <h3 class="header center blue-text">Off-Chain Data Storage: Ethereum & IPFS!</h3><br><br>
+  <form enctype="multipart/form-data">
+    <div class="row">
+       <div class="col s12 l6">
+        <label>File Type</label>
+        <select class="browser-default" id="id_fileType" onchange="FileType(this.value)">
+          <option value="" disabled selected>Choose input type</option>
+          <option value="1">File</option>
+          <option value="2">Message</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div id="insFileType">
+      </div>
+    </div>
+    <div class='row'>
+      <div class="col s6">
+        <a href="#" class="btn" onclick='ipfsUpload()' style="background-color:#0f9d58"><span>Send</span></a>
+      </div>
+    </div>
+    <div class='container card grey lighten-3'>
+      <div class='card-content'>
+        <div class="row">
+          <div id='ipfs_hash' class="col s12 l12">
+            <p id='insHere'></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+
+
+  <script type="text/javascript">
+    function FileType(fType){
+      if (fType == '1'){
+        $('#id_message').remove();
+        $("#insFileType").after('\
+          <div id="id_file" class="col l6"> \
+            <div class="file-field input-field"> \
+              <div class="btn"> \
+                <span>File</span> \
+                <input type="file" id="actual_file" data-url="/ipfsLink" data-form-data="{"csrfmiddlewaretoken": "{{ csrf_token }}"}"> \
+              </div> \
+              <div class="file-path-wrapper"> \
+                <input class="file-path validate" type="text"> \
+              </div> \
+            </div>\
+          </div>');
+      }else if (fType == '2'){
+        $('#id_file').remove();
+        $("#insFileType").after('\
+          <div id="id_message" class="col l6">\
+            <input placeholder="Type your message!" id="message" type="text">\
+          </div>');
+      }
+    }
+    
+    var userAccount;
+    var cryptoIpfs;
+    function startApp() {
+        var contractAddress = "0x38ea6E8173e0C7505a927647916a1Ff340f1549b";
+        cryptoIpfs = web3js.eth.contract(abi);
+        cryptoIpfsInstance = cryptoIpfs.at(contractAddress);
+
+        var accountInterval = setInterval(function() {
+          if (web3js.eth.accounts[0] !== userAccount) {
+            userAccount = web3js.eth.defaultAccount;
+          }
+        }, 1000);}
+
+    function save_hash(hash){
+      $('#uploading').append('<p id="txnMining">[INFO] Starting txn solidification on blockchain...</p>');
+      var result = cryptoIpfsInstance.saveHash(hash,{value:web3js.toWei("0.001"), gas:140000}, 
+        function(err, txn_hash_res){
+          console.log(err == null);
+          if (err){
+            //$("#txnMining").text('[INFO] Error in MetaMask payment!!! Please try again');
+            $('#txnMining').append('<p style="color:#ff0000;">' + err + '</p>');
+          }else{
+            $("#txnMining").text('[INFO] MetaMask payment complete!');
+            $('#txnMining').append('<p>Transaction hash: ' + txn_hash_res + '</p>');
+            $('#txnMining').append('<p>Transaction Link: <a href="https://ropsten.etherscan.io/tx/' + txn_hash_res + '" target="_blank" >link</a>');
+          }/*
+          web3js.eth.getBlock("pending", 
+            function(err,block_res){
+              console.log(block_res);
+              while (block_res.hash == null){
+                console.log("Mining in progress...");
+                // STOP condition!!!
+              }
+              var txnReceipt = web3js.eth.getTransactionReceipt(txn_hash_res, 
+                function(err,txn_status_res){
+                  console.log(txn_status_res.status);
+                  if (txn_status_res.status == "0x1"){
+                    console.log("Transactions mined successfully!");}
+                }
+              );
+            }
+          );*/
+        }
+      );
+    }
+
+    function ipfsUpload(){
+      event.preventDefault();
+      $('#insHere').prepend('<br><p id="uploading">[INFO] Uploading to IPFS...</p>');
+      
+      var ftype = document.getElementById('id_fileType').value;
+      if (ftype == "1"){
+        var file = $('#actual_file')[0].files[0];
+        
+        var formData = new FormData();
+        formData.append("csrfmiddlewaretoken","{{ csrf_token }}");
+        formData.append("filetype",ftype);
+        formData.append("file",file);
+
+      } else if(ftype == "2"){
+        var msg = document.getElementById('message').value;
+        var formData = new FormData();
+        formData.append("csrfmiddlewaretoken","{{ csrf_token }}");
+        formData.append("filetype",ftype);
+        formData.append("msg",msg);
+      }
+
+      $.ajax({
+        type: "POST",
+        url: "/ipfsLink",
+        async: true,
+        dataType: "json",
+        data: formData,
+        processData: false,
+        contentType: false,
+        }).done(function(data) {
+          $(".uploading").text('[INFO] Uploaded!');
+          if ("Name" in data){
+            $('#uploading').append('<p>Name: ' + data.Name + '</p>');
+          }
+          $('#uploading').append('<p>IPFS Hash: ' + data.hash + '</p>');
+          $('#uploading').append('<p>IPFS Link: <a href="' + data.link + '" target="_blank" >link</a>');
+          save_hash(data.hash);
+        })
+    };
+
+    window.addEventListener('load', function(){
+      if (typeof web3 !== 'undefined') {                  // Checking if Web3 has been injected by the browser (Mist/MetaMask)
+        web3js = new Web3(web3.currentProvider);
+        var accStat = web3js.eth.defaultAccount;
+        if (web3js.eth.defaultAccount == null){
+          alert("Please login to MetaMask extension!");
+        }
+      } else {                                            // Handle the case where the user doesn't have Metamask installed
+        alert("Hey there! You might want to install MetaMask extension from metamask.io/ and connect to Ropsten test network");
+      }
+      networkCheck()
+    })
+    
+    function networkCheck(){
+      
+      web3js.version.getNetwork((err, netId) => {
+        switch (netId) {
+          case "1":
+            alert("This is Mainnet. Please switch to Ropsten Test Network!");
+            break
+          case "2":
+            alert("This is deprecated Morden test network. Please switch to Ropsten Test Network!");
+            break
+          case "3":
+            alert("Nice! You're now connected to Ropsten Test Network!");
+            startApp()
+            break
+          case "4":
+            alert("This is Rinkeby test network. Please switch to Ropsten Test Network!");
+            break
+          case "42":
+            alert("This is Kovan test network. Please switch to Ropsten Test Network!");
+            break
+          default:
+            alert('This is an unknown network. Please connect to Ropsten Test Network')
+        }
+      })
+    }
+
+  // CSRF code
+    function getCookie(name) {
+      var cookieValue = null;
+      var i = 0;
+      if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (i; i < cookies.length; i++) {
+          var cookie = jQuery.trim(cookies[i]);
+          // Does this cookie string begin with the name we want?
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+    
+    var csrftoken = getCookie('csrftoken');
+    function csrfSafeMethod(method) {
+      // these HTTP methods do not require CSRF protection
+      return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    }
+    
+    $.ajaxSetup({
+      crossDomain: false, // obviates need for sameOrigin test
+      beforeSend: function(xhr, settings) {
+      if (!csrfSafeMethod(settings.type)) {
+        xhr.setRequestHeader("X-CSRFToken", csrftoken);
+      }
+    }
+  });
+
+  </script>
+ {% endblock %}
+
+{% block load_js %}
+{% endblock %}

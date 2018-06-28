@@ -1,5 +1,7 @@
 # Off-Chain-Storage
 
+Web 3.0 apps (Ðapp) now-a-days need to store/retrieve data just like Web 2.0 (conventional/centralized) apps. But it is extremely costly (computationally and hence monetarily) to store data (> few bytes) for eg PDF, images, etc on EVM. The EVM allow us to save variables/state in permanent storage cheaply. So a possible solution to store large data is to save the data off-chain using options such as: [IPFS](https://ipfs.io/) and [Swarm](http://swarm-guide.readthedocs.io/en/latest/introduction.html). In this Ðapp, IPFS has been used for off-chain storage!
+
 ## Ðapp Preview
 <div align="center">
     <img src="https://pyofey.pythonanywhere.com/static/dapp.png"><br><br>

@@ -51,11 +51,12 @@
   <div id="recentModal" class="modal">
     <div class="modal-content">
       <h4>Your Recent Messages</h4>
-      <table class="striped centered">
+      <table class="striped centered responsive-table">
         <thead>
           <tr>
               <th>Hash Value</th>
-              <th>Time of Hash</th>
+              <th>IPFS Link</th>
+              <th>Time (in UTC)</th>
           </tr>
         </thead>
         <tbody id="insRecentHere">
@@ -79,6 +80,7 @@
   <script type="text/javascript">
     var userAccount;
     var cryptoIpfs;
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     function startApp() {
         var contractAddress = "0x38ea6E8173e0C7505a927647916a1Ff340f1549b";
         cryptoIpfs = web3js.eth.contract(abi);
@@ -187,6 +189,25 @@
     }
     
     function ipfsGetRecent(){
+      cryptoIpfsInstance.lastHashId.call(function(err, res){
+        if (err){
+
+        }else{
+          $("#notifyModal").modal("close");
+          $("#recentModal").modal("open");
+          for (i=0; i<res["c"][0];i++){
+            cryptoIpfsInstance.findHash(i,function(error, hashRet){
+              if (hashRet[0].toLowerCase() == userAccount.toLowerCase()) {
+                var date = new Date(hashRet[2]*1000);
+                var formattedTime = date.getHours() + ':' + ("0" + date.getMinutes()).substr(-2) + ':' + ("0" + date.getSeconds()).substr(-2) + '  ' + date.getDate() + '-' + months[date.getMonth()] + '-' + date.getFullYear();
+                $('#insRecentHere').prepend('<tr><td>' + hashRet[1] + '</td><td><a target="_blank" href="https://ipfs.io/ipfs/' + hashRet[1] + '">Link</a></td><td>' + formattedTime + '</td></tr>');
+              }
+            })
+          }
+        }
+      })
+
+      /*
       $("#notifyModal").modal("open");
       $.ajax({
         type: "POST",
@@ -201,6 +222,7 @@
           }
           $("#recentModal").modal("open");
         })
+      */
     }
 
     function networkCheck(){

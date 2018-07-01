@@ -22,7 +22,7 @@ Web 3.0 apps (Ðapp) now-a-days need to store/retrieve data just like Web 2.0 (c
 - After compiling it, go to Run tab and click on "deploy". Metamask should bring up a popup asking you to confirm the transaction. If not, just open the Metamask extension and do it there.
 - A message at the bottom of the Remix console will notify you when the contract is deployed. You can click on the link to explore the transaction on [ropsten.etherscan.io](https://ropsten.etherscan.io/). Note the contracts address!
 - Download Django source code.
-- Now the root folder of source code:
+- Now open the root folder of the source code in terminal:
     ```bash
     $ mkvirtualenv --python=python3 venv
     $ pip install requirements.txt

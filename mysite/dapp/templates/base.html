@@ -21,8 +21,11 @@
 	 {#footer-down {min-height:180px;}}
 
 	#nav_color {color:#fff;background-color:#04649d}
+	/*#nav_color {color:#fff;background-color:#04649d}
+	#nav_color {color:#fff;background-color:#BA0A35}
+	#footer_color {color:#fff;background-color:#325c00}*/
 	#footer_color {color:#fff;background-color:#026627}
-	
+
 	{% block load_css %}
 	{% endblock %}
   </style>
@@ -34,18 +37,13 @@
   <!--<nav id='nav_color' role="navigation">-->
 	<div class="nav-wrapper container"><a id="logo-container" href="/" class="brand-logo" title="Stormy Developers"><img src='/static/images/python_logo_mod.png' style='width:1.2em; height:1.2em'></a>
 	  <ul class="right hide-on-med-and-down">
-	   {% if user.is_authenticated %}
-		 <li class="waves-effect waves-light"><a href="{% url 'ipfsLink' %}">IpfsLink</a></li>
-		 <li><a class="dropdown-button" data-beloworigin="true" data-constrainwidth="false" data-alignment="right" data-outduration="500" data-hover="true" data-activates="dropdown1">MENU<i class="material-icons right">arrow_drop_down</i></a></li>
-	   {% else %}
-		 <li class="waves-effect waves-light"><a href="{% url 'ipfsLink' %}">IpfsLink</a></li>
-		 <li><a class="dropdown-button" data-beloworigin="true" data-constrainwidth="false" data-alignment="right" data-outduration="500" data-hover="true" data-activates="dropdown1">MENU<i class="material-icons right">arrow_drop_down</i></a></li>
-	   {% endif %}
+		<li><a class="dropdown-button" data-beloworigin="true" data-constrainwidth="false" data-alignment="right" data-outduration="500" data-hover="true" data-activates="dropdown1">MENU<i class="material-icons right">arrow_drop_down</i></a></li>
 	  </ul>
 
   <!-- Dropdown Structure -->
   <ul id="dropdown1" class="dropdown-content blue-text">
-	<li class="waves-effect"><a class='blue-text' href="#">ABCD</a></li>
+	<li class="waves-effect waves-light"><a class='blue-text' href="{% url 'ipfsLink' %}">IpfsLink</a></li>
+	<li class="waves-effect waves-light"><a class='blue-text' href="#">Decentralised Lottery (coming soon!)</a></li>
 	{% if user.is_authenticated %}
 		{% if user.is_superuser %}
 		  <li class="waves-effect"><a class='blue-text' class="waves-effect" href="/admin" target="_blank">ADMIN</a></li>
@@ -58,8 +56,8 @@
 
   <!--Mobile Demo-->
 	  <ul id="nav-mobile" class="side-nav">
-		<li class="waves-effect"><a class="blue-text" href="#">ABCD</a></li><br>
-		<li class="waves-effect"><a class="blue-text" href="#">ABCD</a></li>
+		<li class="waves-effect"><a class="blue-text" href="{% url 'ipfsLink' %}">IpfsLink</a></li><br>
+		<li class="waves-effect"><a class="blue-text" href="#">Decentralised Lottery (coming soon!)</a></li><br>
 		{% if user.is_authenticated %}
 		  {% if user.is_superuser %}
 			<li class="divider"></li>

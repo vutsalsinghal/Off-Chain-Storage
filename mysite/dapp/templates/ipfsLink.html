@@ -1,14 +1,15 @@
 {% extends "base.html" %}
  {% block title_html %}
-  IpfsLink | Hi There!
+  IpfsLink Dapp | Hybrid App
  {% endblock %}
 
  {% block load_header %}
   <script src="/static/js/web3.min.js"></script>
   <script language="javascript" type="text/javascript" src="/static/js/contract_abi.js"></script>
+  <script src="https://unpkg.com/ipfs-api/dist/index.min.js"></script>
  {% endblock %}
 
- {% block content %}  
+ {% block content %}
   <h3 class="header center blue-text">Off-Chain Data Storage: Ethereum & IPFS!</h3><br><br>
   <form enctype="multipart/form-data">
     <div class="row">
@@ -81,6 +82,7 @@
     var userAccount;
     var cryptoIpfs;
     var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var ipfs = window.IpfsApi({host:'ipfs.infura.io', port:'5001',protocol:'https'})          // IPFS node
     function startApp() {
         var contractAddress = "0x38ea6E8173e0C7505a927647916a1Ff340f1549b";
         cryptoIpfs = web3js.eth.contract(abi);
@@ -95,46 +97,47 @@
     function ipfsUpload(){
       event.preventDefault();
       $('#insHere').prepend('<br><p id="uploading">[INFO] Uploading to IPFS...</p>');
-      
+
       var ftype = document.getElementById('id_fileType').value;
       if (ftype == "1"){
-        var file = $('#actual_file')[0].files[0];
-        
-        var formData = new FormData();
-        formData.append("csrfmiddlewaretoken","{{ csrf_token }}");
-        formData.append("filetype",ftype);
-        formData.append("file",file);
+        var fileObj = $('#actual_file')[0].files[0];
+        let reader = new window.FileReader()
+        reader.onloadend = () => saveToIpfs(reader)
+        reader.readAsArrayBuffer(fileObj);
+
+        // Upload to IPFS
+        function saveToIpfs(reader){
+        	const buffer = ipfs.types.Buffer.from(reader.result);
+	        ipfs.add(buffer, function (err, res){
+			    if(err || !res) return console.error(err, res);
+			    res.forEach(function(file){
+				  $(".uploading").text('[INFO] Uploaded!');
+			      $('#uploading').append('<p>IPFS Hash: ' + file.hash + '</p>');
+			      $('#uploading').append('<p>IPFS Link: <a href="https://ipfs.io/ipfs/' + file.hash + '" target="_blank" >link</a>');
+			      save_hash(file.hash);
+			    });
+			})
+	    }
 
       } else if(ftype == "2"){
-        var msg = document.getElementById('message').value;
-        var formData = new FormData();
-        formData.append("csrfmiddlewaretoken","{{ csrf_token }}");
-        formData.append("filetype",ftype);
-        formData.append("msg",msg);
-      }
+          var msg = document.getElementById('message').value;
 
-      $.ajax({
-        type: "POST",
-        url: "/ipfsLink",
-        async: true,
-        dataType: "json",
-        data: formData,
-        processData: false,
-        contentType: false,
-        }).done(function(data) {
-          $(".uploading").text('[INFO] Uploaded!');
-          if ("Name" in data){
-            $('#uploading').append('<p>Name: ' + data.Name + '</p>');
-          }
-          $('#uploading').append('<p>IPFS Hash: ' + data.hash + '</p>');
-          $('#uploading').append('<p>IPFS Link: <a href="' + data.link + '" target="_blank" >link</a>');
-          save_hash(data.hash);
-      })
+          // Upload to IPFS
+          ipfs.add(ipfs.types.Buffer(msg), function (err, res){
+		    if(err || !res) return console.error(err, res);
+		    res.forEach(function(file) {
+			  $(".uploading").text('[INFO] Uploaded!');
+		      $('#uploading').append('<p>IPFS Hash: ' + file.hash + '</p>');
+		      $('#uploading').append('<p>IPFS Link: <a href="https://ipfs.io/ipfs/' + file.hash + '" target="_blank" >link</a>');
+		      save_hash(file.hash);
+		    });
+		 });
+      }
     };
 
     function save_hash(hash){
       $('#uploading').append('<p id="txnMining">[INFO] Starting txn solidification on blockchain...</p>');
-      var result = cryptoIpfsInstance.saveHash(hash,{value:web3js.toWei("0.001"), gas:140000}, 
+      var result = cryptoIpfsInstance.saveHash(hash,{value:web3js.toWei("0.001"), gas:140000},
         function(err, txn_hash_res){
           if (err){
             //$("#txnMining").text('[INFO] Error in MetaMask payment!!! Please try again');
@@ -143,23 +146,7 @@
             $("#txnMining").text('[INFO] MetaMask payment complete!');
             $('#txnMining').append('<p>Transaction hash: ' + txn_hash_res + '</p>');
             $('#txnMining').append('<p>Transaction Link: <a href="https://ropsten.etherscan.io/tx/' + txn_hash_res + '" target="_blank" >link</a>');
-          }/*
-          web3js.eth.getBlock("pending", 
-            function(err,block_res){
-              console.log(block_res);
-              while (block_res.hash == null){
-                console.log("Mining in progress...");
-                // STOP condition!!!
-              }
-              var txnReceipt = web3js.eth.getTransactionReceipt(txn_hash_res, 
-                function(err,txn_status_res){
-                  console.log(txn_status_res.status);
-                  if (txn_status_res.status == "0x1"){
-                    console.log("Transactions mined successfully!");}
-                }
-              );
-            }
-          );*/
+          }
         }
       );
     }
@@ -187,7 +174,7 @@
           </div>');
       }
     }
-    
+
     function ipfsGetRecent(){
       cryptoIpfsInstance.lastHashId.call(function(err, res){
         if (err){
@@ -199,6 +186,7 @@
             cryptoIpfsInstance.findHash(i,function(error, hashRet){
               if (hashRet[0].toLowerCase() == userAccount.toLowerCase()) {
                 var date = new Date(hashRet[2]*1000);
+
                 var formattedTime = date.getHours() + ':' + ("0" + date.getMinutes()).substr(-2) + ':' + ("0" + date.getSeconds()).substr(-2) + '  ' + date.getDate() + '-' + months[date.getMonth()] + '-' + date.getFullYear();
                 $('#insRecentHere').prepend('<tr><td>' + hashRet[1] + '</td><td><a target="_blank" href="https://ipfs.io/ipfs/' + hashRet[1] + '">Link</a></td><td>' + formattedTime + '</td></tr>');
               }
@@ -226,7 +214,7 @@
     }
 
     function networkCheck(){
-      
+
       web3js.version.getNetwork((err, netId) => {
         switch (netId) {
           case "1":
@@ -292,13 +280,13 @@
       }
       return cookieValue;
     }
-    
+
     var csrftoken = getCookie('csrftoken');
     function csrfSafeMethod(method) {
       // these HTTP methods do not require CSRF protection
       return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
     }
-    
+
     $.ajaxSetup({
       crossDomain: false, // obviates need for sameOrigin test
       beforeSend: function(xhr, settings) {

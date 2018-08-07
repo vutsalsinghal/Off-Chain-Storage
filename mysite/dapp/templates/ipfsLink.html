@@ -184,18 +184,15 @@
           $("#notifyModal").modal("close");
           $("#recentModal").modal("open");
 
-          while (computed == false){
-              for (i=1; i<res["c"][0]+1;i++){
-                cryptoIpfsInstance.findHash(i,function(error, hashRet){
-                if (hashRet[0].toLowerCase() == userAccount.toLowerCase()){
-                    var date = new Date(hashRet[2]*1000);
+          $("#insRecentHere tr").remove(); 
+          for (i=1; i<res["c"][0]+1;i++){
+            cryptoIpfsInstance.findHash(i,function(error, hashRet){
+            if (hashRet[0].toLowerCase() == userAccount.toLowerCase()){
+                var date = new Date(hashRet[2]*1000);
 
-                    var formattedTime = date.getHours() + ':' + ("0" + date.getMinutes()).substr(-2) + ':' + ("0" + date.getSeconds()).substr(-2) + '  ' + date.getDate() + '-' + months[date.getMonth()] + '-' + date.getFullYear();
-                    $('#insRecentHere').prepend('<tr><td>' + hashRet[1] + '</td><td><a target="_blank" href="https://ipfs.io/ipfs/' + hashRet[1] + '">Link</a></td><td>' + formattedTime + '</td></tr>');
-                }
-              })
-            }
-            computed = true;
+                var formattedTime = date.getHours() + ':' + ("0" + date.getMinutes()).substr(-2) + ':' + ("0" + date.getSeconds()).substr(-2) + '  ' + date.getDate() + '-' + months[date.getMonth()] + '-' + date.getFullYear();
+                $('#insRecentHere').prepend('<tr><td>' + hashRet[1] + '</td><td><a target="_blank" href="https://ipfs.io/ipfs/' + hashRet[1] + '">Link</a></td><td>' + formattedTime + '</td></tr>');
+            }})
           }
         }
       })

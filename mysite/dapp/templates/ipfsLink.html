@@ -107,31 +107,32 @@
 
         // Upload to IPFS
         function saveToIpfs(reader){
-        	const buffer = ipfs.types.Buffer.from(reader.result);
-	        ipfs.add(buffer, function (err, res){
-			    if(err || !res) return console.error(err, res);
-			    res.forEach(function(file){
-				  $(".uploading").text('[INFO] Uploaded!');
-			      $('#uploading').append('<p>IPFS Hash: ' + file.hash + '</p>');
-			      $('#uploading').append('<p>IPFS Link: <a href="https://ipfs.io/ipfs/' + file.hash + '" target="_blank" >link</a>');
-			      save_hash(file.hash);
-			    });
-			})
-	    }
+            const buffer = ipfs.types.Buffer.from(reader.result);
+            ipfs.add(buffer, function (err, res){
+                if(err || !res) return console.error(err, res);
+                res.forEach(function(file){
+                  console.log(file);
+                  $(".uploading").text('[INFO] Uploaded!');
+                  $('#uploading').append('<p>IPFS Hash: ' + file.hash + '</p>');
+                  $('#uploading').append('<p>IPFS Link: <a href="https://ipfs.io/ipfs/' + file.hash + '" target="_blank" >link</a>');
+                  save_hash(file.hash);
+                });
+            })
+        }
 
       } else if(ftype == "2"){
-          var msg = document.getElementById('message').value;
-
-          // Upload to IPFS
-          ipfs.add(ipfs.types.Buffer(msg), function (err, res){
-		    if(err || !res) return console.error(err, res);
-		    res.forEach(function(file) {
-			  $(".uploading").text('[INFO] Uploaded!');
-		      $('#uploading').append('<p>IPFS Hash: ' + file.hash + '</p>');
-		      $('#uploading').append('<p>IPFS Link: <a href="https://ipfs.io/ipfs/' + file.hash + '" target="_blank" >link</a>');
-		      save_hash(file.hash);
-		    });
-		 });
+        var msg = document.getElementById('message').value;
+        
+        // Upload to IPFS
+        ipfs.add(ipfs.types.Buffer(msg), function (err, res){
+            if(err || !res) return console.error(err, res);
+            res.forEach(function(file) {
+              $(".uploading").text('[INFO] Uploaded!');
+              $('#uploading').append('<p>IPFS Hash: ' + file.hash + '</p>');
+              $('#uploading').append('<p>IPFS Link: <a href="https://ipfs.io/ipfs/' + file.hash + '" target="_blank" >link</a>');
+              save_hash(file.hash);
+            });
+        });
       }
     };
 
@@ -140,7 +141,6 @@
       var result = cryptoIpfsInstance.saveHash(hash,{value:web3js.toWei("0.001"), gas:140000},
         function(err, txn_hash_res){
           if (err){
-            //$("#txnMining").text('[INFO] Error in MetaMask payment!!! Please try again');
             $('#txnMining').append('<p style="color:#ff0000;">' + err + '</p>');
           }else{
             $("#txnMining").text('[INFO] MetaMask payment complete!');
@@ -174,7 +174,8 @@
           </div>');
       }
     }
-
+    
+    var computed = false;
     function ipfsGetRecent(){
       cryptoIpfsInstance.lastHashId.call(function(err, res){
         if (err){
@@ -182,39 +183,25 @@
         }else{
           $("#notifyModal").modal("close");
           $("#recentModal").modal("open");
-          for (i=0; i<res["c"][0];i++){
-            cryptoIpfsInstance.findHash(i,function(error, hashRet){
-              if (hashRet[0].toLowerCase() == userAccount.toLowerCase()) {
-                var date = new Date(hashRet[2]*1000);
 
-                var formattedTime = date.getHours() + ':' + ("0" + date.getMinutes()).substr(-2) + ':' + ("0" + date.getSeconds()).substr(-2) + '  ' + date.getDate() + '-' + months[date.getMonth()] + '-' + date.getFullYear();
-                $('#insRecentHere').prepend('<tr><td>' + hashRet[1] + '</td><td><a target="_blank" href="https://ipfs.io/ipfs/' + hashRet[1] + '">Link</a></td><td>' + formattedTime + '</td></tr>');
-              }
-            })
+          while (computed == false){
+              for (i=1; i<res["c"][0]+1;i++){
+                cryptoIpfsInstance.findHash(i,function(error, hashRet){
+                if (hashRet[0].toLowerCase() == userAccount.toLowerCase()){
+                    var date = new Date(hashRet[2]*1000);
+
+                    var formattedTime = date.getHours() + ':' + ("0" + date.getMinutes()).substr(-2) + ':' + ("0" + date.getSeconds()).substr(-2) + '  ' + date.getDate() + '-' + months[date.getMonth()] + '-' + date.getFullYear();
+                    $('#insRecentHere').prepend('<tr><td>' + hashRet[1] + '</td><td><a target="_blank" href="https://ipfs.io/ipfs/' + hashRet[1] + '">Link</a></td><td>' + formattedTime + '</td></tr>');
+                }
+              })
+            }
+            computed = true;
           }
         }
       })
-
-      /*
-      $("#notifyModal").modal("open");
-      $.ajax({
-        type: "POST",
-        url: "/ipfsLinkRecent",
-        async: true,
-        dataType: "json",
-        data: {"userAccount":userAccount},
-        }).done(function(data) {
-          $("#notifyModal").modal("close");
-          for (i=0; i<data.arr.length;i++){
-            $('#insRecentHere').prepend('<tr><td>' + data.arr[i][0] + '</td><td>' + data.arr[i][1] + '</td></tr>');
-          }
-          $("#recentModal").modal("open");
-        })
-      */
     }
 
     function networkCheck(){
-
       web3js.version.getNetwork((err, netId) => {
         switch (netId) {
           case "1":
